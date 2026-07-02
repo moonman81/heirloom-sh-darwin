@@ -39,7 +39,12 @@
  */
 
 #include	"defs.h"
-#include	<ucontext.h>
+/*
+ * Darwin port: <ucontext.h> was included upstream but only stack_t and
+ * sigaltstack() are referenced; both live in <signal.h> (POSIX). Darwin
+ * gates <ucontext.h> behind _XOPEN_SOURCE and deprecates the routines,
+ * so drop the include to stay POSIX-portable. -- Heirloom Darwin port.
+ */
 #include	<errno.h>
 #include	<string.h>
 
