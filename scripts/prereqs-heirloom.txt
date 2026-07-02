@@ -1,0 +1,3 @@
+# Companion Heirloom packages required BEFORE this one.
+# sh has no dependencies on other Heirloom packages — it is the
+# foundation everyone else depends on for their build-time /bin/sh.

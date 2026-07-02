@@ -1,0 +1,5 @@
+# Homebrew formulae required to build heirloom-sh.
+# Minimal: sh only needs C toolchain + make + POSIX headers, which
+# come with Xcode CLT. Nothing extra from brew is required.
+#
+# Optional additions (documented in prereqs-brew-optional.txt).
