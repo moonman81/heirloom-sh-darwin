@@ -1,0 +1,73 @@
+From e97c0c5c5ba87ff1d5ff1b6212b7e3e04e893273 Mon Sep 17 00:00:00 2001
+From: Warwick Brown <me@moonman.me.uk>
+Date: Thu, 2 Jul 2026 20:51:33 +0100
+Subject: [PATCH 3/3] phase 7: install + run all brew C
+ linters/checkers/formatters
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Installed 17 tools via brew: cppcheck, splint, flawfinder,
+clang-format, clang-tidy, scan-build (via llvm), include-what-you-use,
+uncrustify, astyle, codespell, cpplint, shellcheck, shfmt, sloccount,
+tokei, bear, cscope, ccache.
+
+New hardening/lint-sweep/ workspace:
+    run.sh       — driver that invokes every tool over sh + devtools +
+                   toolchest + doctools + pkgtools and captures each
+                   report as report-<tool>.txt
+    Makefile     — 'make -C hardening/lint-sweep' re-runs the full sweep
+    REPORT.md    — consolidated review of every tool's output with
+                   CWE distribution, real-bug ratio per category, and
+                   the split between 'fix' and 'won't fix (documented
+                   reasoning)' findings.
+    .cppcheck-suppress (at src root) — categorical suppressions for K&R
+                   patterns cppcheck flags as style but Heirloom
+                   preserves for legacy reasons.
+
+Sweep results (see REPORT.md for full breakdown):
+  - tokei / sloccount confirm ~330k LoC (89% C, 7% C++, 2% yacc,
+    ~1% each for sh/sed/lex, negligible perl/awk).
+  - flawfinder: 5,917 hits at level>=2, 79 at level 5 (all in
+    devtools/make/vroot chmod/chown/readlink race patterns — inherent
+    to SVR4 make's virtual-root design; not fixable without rewrite).
+  - cppcheck: 1 hard error (sh/blok.c:217 missing return path).
+  - clang-tidy: 55 include-cleaner hygiene findings.
+  - splint: 16 findings; real one at sh/main.c:63 documented in
+    REPORT.md as CWE-377 with O_EXCL mitigation preserving safety.
+  - shellcheck: 250 findings; ~30 real portability improvements
+    (bashisms in .sh scripts) noted for a future shell-hardening pass.
+  - codespell: 2,541 hits, all noise (technical acronyms in old code).
+
+Fixes committed alongside:
+    sh/blok.c: chkbptr() had int return type with no return statement
+               (only abort(N) exits). Callers ignore the value.
+               Changed to void; cppcheck missingReturn now clean.
+
+sh smoke: rebuilt + re-installed; still runs cleanly.
+---
+ blok.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/blok.c b/blok.c
+index 7338265..15bafbe 100644
+--- a/blok.c
++++ b/blok.c
+@@ -182,7 +182,13 @@ free(ap)
+ 
+ #ifdef DEBUG
+ 
+-int 
++/*
++ * cppcheck-fix: chkbptr had 'int' return type but no return statement.
++ * Callers ignore the value (see line 173); the abort(N) calls end the
++ * program on any check failure. Change to void to satisfy the analyser
++ * and match the callers' expectation. -- Heirloom Darwin hardening.
++ */
++void
+ chkbptr(struct blk *ptr)
+ {
+ 	int	exf = 0;
+-- 
+2.50.1 (Apple Git-155)
+

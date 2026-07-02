@@ -1,0 +1,47 @@
+From 44c0705fbf5c444e169f24705f7a4e6941d375f7 Mon Sep 17 00:00:00 2001
+From: Warwick Brown <me@moonman.me.uk>
+Date: Thu, 2 Jul 2026 13:39:55 +0100
+Subject: [PATCH 2/3] =?UTF-8?q?phase=201:=20sh=20=E2=80=94=20drop=20unused?=
+ =?UTF-8?q?=20<ucontext.h>=20for=20Darwin=20build?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+fault.c #include <ucontext.h> was unreferenced code — only stack_t and
+sigaltstack() are used, both from <signal.h>. Darwin gates <ucontext.h>
+behind _XOPEN_SOURCE and marks the ucontext_t routines deprecated, so
+including it triggered an #error on this platform.
+
+Dropping the include is future-proof: <signal.h> is guaranteed to
+carry stack_t + sigaltstack by POSIX, so this build is unchanged on
+Linux/BSD and now compiles cleanly on Darwin without needing to
+enable a deprecated feature-test macro.
+
+Build verified: sh runs basic scripts, pipes, param expansion, jobs,
+here-docs; jsh symlink works; man page installs. Staged to
+/tmp/heirloom-stage/opt/heirloom/{bin,share/man/5man/man1}.
+---
+ fault.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/fault.c b/fault.c
+index b17a6cf..0f1f89f 100644
+--- a/fault.c
++++ b/fault.c
+@@ -39,7 +39,12 @@
+  */
+ 
+ #include	"defs.h"
+-#include	<ucontext.h>
++/*
++ * Darwin port: <ucontext.h> was included upstream but only stack_t and
++ * sigaltstack() are referenced; both live in <signal.h> (POSIX). Darwin
++ * gates <ucontext.h> behind _XOPEN_SOURCE and deprecates the routines,
++ * so drop the include to stay POSIX-portable. -- Heirloom Darwin port.
++ */
+ #include	<errno.h>
+ #include	<string.h>
+ 
+-- 
+2.50.1 (Apple Git-155)
+

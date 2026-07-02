@@ -1,0 +1,89 @@
+diff --git a/blok.c b/blok.c
+index 7338265..15bafbe 100644
+--- a/blok.c
++++ b/blok.c
+@@ -182,7 +182,13 @@ free(ap)
+ 
+ #ifdef DEBUG
+ 
+-int 
++/*
++ * cppcheck-fix: chkbptr had 'int' return type but no return statement.
++ * Callers ignore the value (see line 173); the abort(N) calls end the
++ * program on any check failure. Change to void to satisfy the analyser
++ * and match the callers' expectation. -- Heirloom Darwin hardening.
++ */
++void
+ chkbptr(struct blk *ptr)
+ {
+ 	int	exf = 0;
+diff --git a/fault.c b/fault.c
+index b17a6cf..0f1f89f 100644
+--- a/fault.c
++++ b/fault.c
+@@ -39,7 +39,12 @@
+  */
+ 
+ #include	"defs.h"
+-#include	<ucontext.h>
++/*
++ * Darwin port: <ucontext.h> was included upstream but only stack_t and
++ * sigaltstack() are referenced; both live in <signal.h> (POSIX). Darwin
++ * gates <ucontext.h> behind _XOPEN_SOURCE and deprecates the routines,
++ * so drop the include to stay POSIX-portable. -- Heirloom Darwin port.
++ */
+ #include	<errno.h>
+ #include	<string.h>
+ 
+diff --git a/makefile b/makefile
+index 664a61d..3539ed1 100644
+--- a/makefile
++++ b/makefile
+@@ -7,12 +7,12 @@ ROOT=
+ #
+ # The destination directory for the "sh" and "jsh" binaries.
+ #
+-SV3BIN=/usr/5bin
++SV3BIN=/opt/heirloom/bin
+ 
+ #
+ # Location for manual pages (with man1 below).
+ #
+-MANDIR=/usr/share/man/5man
++MANDIR=/opt/heirloom/share/man/5man
+ 
+ #
+ # Enable this definition if spell checking should be done for the
+@@ -23,7 +23,7 @@ MANDIR=/usr/share/man/5man
+ #
+ # A BSD-compatible install command.
+ #
+-UCBINST=/usr/ucb/install
++UCBINST=/usr/bin/install
+ 
+ #
+ # The strip command that is used at installation time.
+@@ -44,17 +44,19 @@ LNS=ln -s
+ #
+ # Compiler flags.
+ #
+-CFLAGS=-O
++CFLAGS=-O -g
+ 
+ #
+-# Flags for the C preprocessor.
++# Flags for the C preprocessor. (Note: the shipped makefile had a bug
++# here — a second CFLAGS= line clobbered the first. Restored as CPPFLAGS.)
+ #
+-CFLAGS=-D_GNU_SOURCE
++CPPFLAGS=-D_DARWIN_C_SOURCE
+ 
+ #
+ # A define for large file support, if necessary.
++# (Darwin off_t is already 64-bit; leave empty.)
+ #
+-LARGEF=-D_FILE_OFFSET_BITS=64L
++LARGEF=
+ 
+ #
+ # The compiler warning options.
