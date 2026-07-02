@@ -7,12 +7,12 @@ ROOT=
 #
 # The destination directory for the "sh" and "jsh" binaries.
 #
-SV3BIN=/usr/5bin
+SV3BIN=/opt/heirloom/bin
 
 #
 # Location for manual pages (with man1 below).
 #
-MANDIR=/usr/share/man/5man
+MANDIR=/opt/heirloom/share/man/5man
 
 #
 # Enable this definition if spell checking should be done for the
@@ -23,7 +23,7 @@ MANDIR=/usr/share/man/5man
 #
 # A BSD-compatible install command.
 #
-UCBINST=/usr/ucb/install
+UCBINST=/usr/bin/install
 
 #
 # The strip command that is used at installation time.
@@ -44,17 +44,19 @@ LNS=ln -s
 #
 # Compiler flags.
 #
-CFLAGS=-O
+CFLAGS=-O -g
 
 #
-# Flags for the C preprocessor.
+# Flags for the C preprocessor. (Note: the shipped makefile had a bug
+# here — a second CFLAGS= line clobbered the first. Restored as CPPFLAGS.)
 #
-CFLAGS=-D_GNU_SOURCE
+CPPFLAGS=-D_DARWIN_C_SOURCE
 
 #
 # A define for large file support, if necessary.
+# (Darwin off_t is already 64-bit; leave empty.)
 #
-LARGEF=-D_FILE_OFFSET_BITS=64L
+LARGEF=
 
 #
 # The compiler warning options.
