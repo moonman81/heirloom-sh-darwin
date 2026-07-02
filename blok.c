@@ -182,7 +182,13 @@ free(ap)
 
 #ifdef DEBUG
 
-int 
+/*
+ * cppcheck-fix: chkbptr had 'int' return type but no return statement.
+ * Callers ignore the value (see line 173); the abort(N) calls end the
+ * program on any check failure. Change to void to satisfy the analyser
+ * and match the callers' expectation. -- Heirloom Darwin hardening.
+ */
+void
 chkbptr(struct blk *ptr)
 {
 	int	exf = 0;
