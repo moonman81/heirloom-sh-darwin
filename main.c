@@ -44,6 +44,7 @@
 #include	"sym.h"
 #include	"hash.h"
 #include	"timeout.h"
+#include	"heirloom_flags.h"
 #include	<sys/types.h>
 #include	<sys/stat.h>
 #include	<sys/wait.h>
@@ -81,7 +82,7 @@ char **execargs = (char **)(-2);
 static void exfile(int);
 
 
-int 
+int
 main(int c, char *v[], char *e[])
 {
 	register int	rflag = ttyflg;
@@ -89,6 +90,9 @@ main(int c, char *v[], char *e[])
 	register unsigned char *flagc = flagadr;
 	struct namnod	*n;
 
+	/* sh's -h (hash) and -v (verbose) are load-bearing legacy flags;
+	 * mask them out and honour only --help/--usage/-H and --version/-V. */
+	heirloom_flags(c, v, "sh", HF_H_TAKEN | HF_VERBOSE_TAKEN);
 	init_sigval();
 	mypid = getpid();
 	mypgid = getpgid(mypid);
@@ -580,7 +584,7 @@ setmail(unsigned char *mailpath)
 	}
 }
 
-void 
+void
 setwidth(void)
 {
 	unsigned char *name = lookup("LC_ALL")->namval;
